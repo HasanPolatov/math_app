@@ -1,4 +1,8 @@
 using System.Windows.Forms;
+using System.Drawing;
+using System.Windows.Forms;
+using System;
+
 
 namespace WinFormsApp2
 {
@@ -9,7 +13,8 @@ namespace WinFormsApp2
         List<MyClass> list = new();
         DataGridView dataGridView = new DataGridView();
         DataGridView deltas = new DataGridView();
-
+        List<PointF> liniarFunctionPoints = new List<PointF>();
+        List<PointF> squareFunctionPoints = new List<PointF>();
 
         int n;
 
@@ -25,7 +30,7 @@ namespace WinFormsApp2
             tableLayoutPanel.Controls.Clear();
 
             tableLayoutPanel.AutoSize = true;
-            tableLayoutPanel.Location = new Point(label1.Location.X, label1.Location.Y + 30);
+            tableLayoutPanel.Location = new Point(label1.Location.X, label1.Location.Y + 50);
             tableLayoutPanel.ColumnCount = 2;
             tableLayoutPanel.RowCount = n + 1;
 
@@ -86,7 +91,7 @@ namespace WinFormsApp2
 
             dataGridView.Visible = true;
 
-            dataGridView.Location = new Point(label1.Location.X, label1.Location.Y + 30);
+            dataGridView.Location = new Point(label1.Location.X, label1.Location.Y + 50);
 
             dataGridView.ColumnCount = 8;
 
@@ -182,16 +187,22 @@ namespace WinFormsApp2
 
             double[] responceOfLinearMethod = SolveLinearEquations(valueOfLinearMethod);
 
-            string linearAns = "y = " + responceOfLinearMethod[0].ToString("0.####") + "x "; // + "x + " + responceOfLinearMethod[1];
-            if (responceOfLinearMethod[1] > 0)
+
+            string linearAns = "y = " + responceOfLinearMethod[0].ToString("0.####") + "x ";
+
+            if (responceOfLinearMethod[1] != 0)
             {
-                linearAns += "+ ";
+                if (responceOfLinearMethod[1] > 0)
+                {
+                    linearAns += "+ ";
+                }
+
+                linearAns += responceOfLinearMethod[1].ToString("0.####");
             }
 
-            linearAns += responceOfLinearMethod[1].ToString("0.####");
 
 
-            label2.Text = linearAns;
+            label2.Text = "Chiziqli model : " + linearAns;
             label2.Visible = true;
 
 
@@ -205,25 +216,39 @@ namespace WinFormsApp2
 
             double[] responceOfSquareMethod = SolveLinearEquations(valueOfSquareMethod);
 
-            string squareAns = "y = " +
-                responceOfSquareMethod[0].ToString("0.####") +
+            string squareAns = "y = ";
+
+
+            if (responceOfSquareMethod[0] != 0)
+            {
+                squareAns += responceOfSquareMethod[0].ToString("0.####") +
                 "x" + '\u00B2' + " ";
-
-            if (responceOfSquareMethod[1] > 0)
-            {
-                squareAns += "+ ";
             }
 
-            squareAns += responceOfSquareMethod[1].ToString("0.####") + "x ";
 
-            if (responceOfSquareMethod[2] > 0)
+            if (responceOfSquareMethod[1] != 0)
             {
-                squareAns += "+ ";
+
+                if (responceOfSquareMethod[1] >= 0)
+                {
+                    squareAns += "+ ";
+                }
+                squareAns += responceOfSquareMethod[1].ToString("0.####") + "x ";
             }
 
-            squareAns += responceOfSquareMethod[2].ToString("0.####");
+            if (responceOfSquareMethod[2] != 0)
+            {
+                if (responceOfSquareMethod[2] > 0)
+                {
+                    squareAns += "+ ";
+                }
 
-            label3.Text = squareAns;
+                squareAns += responceOfSquareMethod[2].ToString("0.####");
+            }
+
+
+
+            label3.Text = "Kvadratik model : " + squareAns;
             label3.Visible = true;
 
             button2.Visible = false;
@@ -254,6 +279,8 @@ namespace WinFormsApp2
 
                 double y_1_x = list[i].X * y1[0] + y1[1];
                 double y_2_x = Math.Pow(list[i].X, 2) * y2[0] + list[i].X * y2[1] + y2[2];
+                liniarFunctionPoints.Add(new PointF((float)list[i].X, (float)(y_1_x)));
+                squareFunctionPoints.Add(new PointF((float)list[i].X, (float)(y_2_x)));
 
                 string[] row = new string[]
                 {
@@ -267,6 +294,13 @@ namespace WinFormsApp2
                 this.Controls.Add(deltas);
 
             }
+
+            label4.Visible = true;
+            label5.Visible = true;
+            pictureBox1.Invalidate();
+            pictureBox2.Invalidate();
+            pictureBox1.Visible = true;
+            pictureBox2.Visible = true;
 
         }
 
@@ -309,17 +343,101 @@ namespace WinFormsApp2
             deltas.Rows.Clear();
             dataGridView.Visible = false;
             deltas.Visible = false;
-            numericUpDown1.Value = 1;
+            numericUpDown1.Value = 2;
             label2.Visible = false;
             label3.Visible = false;
             tableLayoutPanel.Visible = true;
+            pictureBox1.Visible = false;
+            pictureBox2.Visible = false;
+            pictureBox1.Image = null;
+            pictureBox2.Image = null;
+            liniarFunctionPoints.Clear();
+            squareFunctionPoints.Clear();
             list.Clear();
+            label4.Visible = false;
+            label5.Visible = false;
         }
 
-        private void label2_Click(object sender, EventArgs e)
+
+        private void PictureBox1_Paint(object sender, PaintEventArgs e)
+        {
+            Graphics g = e.Graphics;
+
+            int width = pictureBox1.ClientSize.Width;
+            int height = pictureBox1.ClientSize.Height;
+            int padding = 50;
+
+            double xScale = (width - 2 * padding) / 20.0;
+            double yScale = (height - 2 * padding) / 10.0;
+
+            using (Pen pen = new Pen(Color.Blue))
+            {
+                g.DrawLine(pen, padding, padding, padding, height - padding);
+                g.DrawLine(pen, padding, height - padding, width - padding, height - padding);
+
+                pen.Color = Color.Black;
+                pen.Width = 2;
+
+
+                if (liniarFunctionPoints.Count > 1)
+                {
+                    for (int i = 1; i < liniarFunctionPoints.Count; i++)
+                    {
+                        PointF previousPoint = liniarFunctionPoints[i - 1];
+                        PointF currentPoint = liniarFunctionPoints[i];
+
+                        int previousScreenX = (int)(previousPoint.X * xScale + width / 2);
+                        int previousScreenY = (int)((-1) * previousPoint.Y * yScale + height / 2);
+                        int currentScreenX = (int)(currentPoint.X * xScale + width / 2);
+                        int currentScreenY = (int)((-1) * currentPoint.Y * yScale + height / 2);
+
+                        g.DrawLine(pen, previousScreenX, previousScreenY, currentScreenX, currentScreenY);
+                    }
+                }
+
+            }
+        }
+
+
+        private void PictureBox2_Paint(object sender, PaintEventArgs e)
         {
 
+            Graphics g = e.Graphics;
+
+            int width = pictureBox1.ClientSize.Width;
+            int height = pictureBox1.ClientSize.Height;
+            int padding = 50;
+
+            double xScale = (width - 2 * padding) / 20.0;
+            double yScale = (height - 2 * padding) / 10.0;
+
+            using (Pen pen = new Pen(Color.Blue))
+            {
+                g.DrawLine(pen, padding, padding, padding, height - padding);
+                g.DrawLine(pen, padding, height - padding, width - padding, height - padding);
+
+                pen.Color = Color.Black;
+                pen.Width = 2;
+
+                if (squareFunctionPoints.Count > 1)
+                {
+                    for (int i = 1; i < squareFunctionPoints.Count; i++)
+                    {
+                        PointF previousPoint = squareFunctionPoints[i - 1];
+                        PointF currentPoint = squareFunctionPoints[i];
+
+                        int previousScreenX = (int)(previousPoint.X * xScale + width / 2);
+                        int previousScreenY = (int)((-1) * previousPoint.Y * yScale + height / 2);
+                        int currentScreenX = (int)(currentPoint.X * xScale + width / 2);
+                        int currentScreenY = (int)((-1) * currentPoint.Y * yScale + height / 2);
+
+                        g.DrawLine(pen, previousScreenX, previousScreenY, currentScreenX, currentScreenY);
+                    }
+                }
+            }
         }
+
+
     }
 
 
